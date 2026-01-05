@@ -1,7 +1,7 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
-require('dotenv').config();
+require('dotenv').config({ path: __dirname + '/.env' });
 
 const app = express();
 
@@ -19,22 +19,26 @@ mongoose.connect(process.env.MONGODB_URI)
 app.get('/', (req, res) => {
   res.json({ 
     message: 'ANTHEM SafeMove API', 
-    version: '1.0.0',
+    version: '2.0.0',
     endpoints: {
+      auth: '/api/auth',
       accidentes: '/api/accidentes',
       trafico: '/api/trafico',
       kpis: '/api/kpis',
       puntosMedida: '/api/puntos-medida'
-    }
+    },
+    authentication: 'JWT Bearer Token required for protected routes'
   });
 });
 
 // Importar rutas
+const authRoutes = require('./routes/auth');
 const accidentesRoutes = require('./routes/accidentes');
 const traficoRoutes = require('./routes/trafico');
 const kpisRoutes = require('./routes/kpis');
 const puntosMedidaRoutes = require('./routes/puntosMedida');
 
+app.use('/api/auth', authRoutes);
 app.use('/api/accidentes', accidentesRoutes);
 app.use('/api/trafico', traficoRoutes);
 app.use('/api/kpis', kpisRoutes);

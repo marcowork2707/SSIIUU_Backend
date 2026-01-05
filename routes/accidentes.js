@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const Accidente = require('../models/Accidente');
+const { verificarToken, verificarRol } = require('../middleware/auth');
 
 // GET todos los accidentes (con paginación y filtros)
 router.get('/', async (req, res) => {
@@ -76,7 +77,7 @@ router.get('/heatmap', async (req, res) => {
     if (distrito) query.distrito = distrito;
     
     const accidentes = await Accidente.find(query)
-      .select('coordenadas tipo_accidente lesividad')
+      .select('coordenadas tipo_accidente lesividad distrito cod_lesividad')
       .lean();
     
     // Formato para heatmap frontend
@@ -85,7 +86,11 @@ router.get('/heatmap', async (req, res) => {
       .map(a => ({
         lat: a.coordenadas.coordinates[1],
         lng: a.coordenadas.coordinates[0],
-        intensity: a.lesividad === '03' || a.lesividad === '04' ? 1.5 : 1
+        tipo_accidente: a.tipo_accidente,
+        distrito: a.distrito,
+        lesividad: a.cod_lesividad,
+        lesividadTexto: a.lesividad,
+        intensity: a.cod_lesividad === '3' || a.cod_lesividad === '4' ? 1.5 : 1
       }));
     
     res.json(puntos);

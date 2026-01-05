@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const Accidente = require('../models/Accidente');
+const { verificarToken, verificarRol } = require('../middleware/auth');
 
 // GET KPIs generales
 router.get('/general', async (req, res) => {
@@ -45,8 +46,8 @@ router.get('/general', async (req, res) => {
   }
 });
 
-// GET scoring de riesgo por zona y hora
-router.get('/riesgo', async (req, res) => {
+// GET scoring de riesgo por zona y hora (PROTEGIDO - Solo gestores y admin)
+router.get('/riesgo', verificarToken, verificarRol('gestor', 'admin'), async (req, res) => {
   try {
     const { distrito } = req.query;
     
