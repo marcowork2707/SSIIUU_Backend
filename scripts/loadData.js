@@ -8,49 +8,64 @@ const Accidente = require('../models/Accidente');
 const PuntoMedida = require('../models/PuntoMedida');
 const Trafico = require('../models/Trafico');
 
-// Función para convertir coordenadas UTM a lat/lng (zona UTM 30N - España)
-function utmToLatLng(x, y) {
-  // Conversión aproximada usando proyección UTM zona 30N
-  // x e y están en metros
-  const zone = 30;
-  const k0 = 0.9996;
-  const e = 0.00669438;
+// Función para convertir coordenadas UTM a lat/lng (zona UTM 30N - ETRS89/WGS84)
+function utmToLatLng(easting, northing) {
+  // Zona 30N: Meridiano central -3° (longitud 3°W)
+  // Para Madrid: X ≈ 440000, Y ≈ 4474000
+  
+  const a = 6378137.0; // Semi-eje mayor WGS84 (metros)
+  const e = 0.0818191908426; // Primera excentricidad
   const e2 = e * e;
-  const e3 = e2 * e;
-  const e_p2 = e / (1 - e);
+  const k0 = 0.9996; // Factor de escala UTM
   
-  x = x - 500000.0; // False Easting
-  y = y; // False Northing para hemisferio norte
+  // Eliminar falso este (500km)
+  const x = easting - 500000.0;
+  const y = northing;
   
-  const m = y / k0;
-  const mu = m / (6378137.0 * (1 - e / 4 - 3 * e2 / 64 - 5 * e3 / 256));
+  // Meridiano central de la zona 30N
+  const lon0 = -3.0 * Math.PI / 180.0;
   
-  const p_rad = (mu + 
-    (3 * e / 2 - 27 * e3 / 32) * Math.sin(2 * mu) + 
-    (21 * e2 / 16 - 55 * e3 / 32) * Math.sin(4 * mu) + 
-    (151 * e3 / 96) * Math.sin(6 * mu));
+  // Cálculo del footpoint latitude
+  const M = y / k0;
+  const mu = M / (a * (1 - e2/4 - 3*e2*e2/64 - 5*e2*e2*e2/256));
   
-  const p_sin = Math.sin(p_rad);
-  const p_cos = Math.cos(p_rad);
-  const p_tan = Math.tan(p_rad);
+  const e1 = (1 - Math.sqrt(1 - e2)) / (1 + Math.sqrt(1 - e2));
   
-  const c1 = e_p2 * p_cos * p_cos;
-  const t1 = p_tan * p_tan;
-  const r1 = 6378137.0 * (1 - e) / Math.pow(1 - e * p_sin * p_sin, 1.5);
-  const n1 = 6378137.0 / Math.sqrt(1 - e * p_sin * p_sin);
-  const d = x / (n1 * k0);
+  const J1 = (3 * e1 / 2 - 27 * Math.pow(e1, 3) / 32);
+  const J2 = (21 * Math.pow(e1, 2) / 16 - 55 * Math.pow(e1, 4) / 32);
+  const J3 = (151 * Math.pow(e1, 3) / 96);
+  const J4 = (1097 * Math.pow(e1, 4) / 512);
   
-  const lat = (p_rad - (n1 * p_tan / r1) * 
-    (d * d / 2 - (5 + 3 * t1 + 10 * c1 - 4 * c1 * c1 - 9 * e_p2) * d * d * d * d / 24 + 
-    (61 + 90 * t1 + 298 * c1 + 45 * t1 * t1 - 252 * e_p2 - 3 * c1 * c1) * d * d * d * d * d * d / 720));
+  const fp = mu + J1 * Math.sin(2*mu) + J2 * Math.sin(4*mu) + J3 * Math.sin(6*mu) + J4 * Math.sin(8*mu);
   
-  const lng = ((d - (1 + 2 * t1 + c1) * d * d * d / 6 + 
-    (5 - 2 * c1 + 28 * t1 - 3 * c1 * c1 + 8 * e_p2 + 24 * t1 * t1) * d * d * d * d * d / 120) / p_cos);
+  // Calcular términos
+  const C1 = e2 * Math.pow(Math.cos(fp), 2);
+  const T1 = Math.pow(Math.tan(fp), 2);
+  const R1 = a * (1 - e2) / Math.pow(1 - e2 * Math.pow(Math.sin(fp), 2), 1.5);
+  const N1 = a / Math.sqrt(1 - e2 * Math.pow(Math.sin(fp), 2));
+  const D = x / (N1 * k0);
   
-  return [
-    ((zone - 1) * 6 - 180 + 3 + lng * 180 / Math.PI), // longitud
-    (lat * 180 / Math.PI) // latitud
-  ];
+  // Calcular latitud
+  const Q1 = N1 * Math.tan(fp) / R1;
+  const Q2 = Math.pow(D, 2) / 2;
+  const Q3 = (5 + 3*T1 + 10*C1 - 4*Math.pow(C1, 2) - 9*e2) * Math.pow(D, 4) / 24;
+  const Q4 = (61 + 90*T1 + 298*C1 + 45*Math.pow(T1, 2) - 3*Math.pow(C1, 2) - 252*e2) * Math.pow(D, 6) / 720;
+  
+  const lat = fp - Q1 * (Q2 - Q3 + Q4);
+  
+  // Calcular longitud
+  const Q5 = D;
+  const Q6 = (1 + 2*T1 + C1) * Math.pow(D, 3) / 6;
+  const Q7 = (5 - 2*C1 + 28*T1 - 3*Math.pow(C1, 2) + 8*e2 + 24*Math.pow(T1, 2)) * Math.pow(D, 5) / 120;
+  
+  const lon = lon0 + (Q5 - Q6 + Q7) / Math.cos(fp);
+  
+  // Convertir a grados
+  const latDeg = lat * 180.0 / Math.PI;
+  const lonDeg = lon * 180.0 / Math.PI;
+  
+  // Retornar [longitud, latitud] para GeoJSON
+  return [lonDeg, latDeg];
 }
 
 // Cargar accidentes
