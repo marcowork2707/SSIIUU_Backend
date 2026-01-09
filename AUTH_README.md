@@ -263,7 +263,7 @@ NODE_ENV=development
 JWT_SECRET=anthem_safemove_super_secret_key_2051_do_not_share
 ```
 
-⚠️ **IMPORTANTE:** En producción, cambia `JWT_SECRET` por una clave segura y única.
+⚠️ **IMPORTANTE:** En producción, cambiar `JWT_SECRET` por una clave segura y única.
 
 ---
 
