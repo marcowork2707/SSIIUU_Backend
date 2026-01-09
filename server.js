@@ -37,12 +37,14 @@ const accidentesRoutes = require('./routes/accidentes');
 const traficoRoutes = require('./routes/trafico');
 const kpisRoutes = require('./routes/kpis');
 const puntosMedidaRoutes = require('./routes/puntosMedida');
+const usuariosRoutes = require('./routes/usuarios');
 
 app.use('/api/auth', authRoutes);
 app.use('/api/accidentes', accidentesRoutes);
 app.use('/api/trafico', traficoRoutes);
 app.use('/api/kpis', kpisRoutes);
 app.use('/api/puntos-medida', puntosMedidaRoutes);
+app.use('/api/usuarios', usuariosRoutes);
 
 // Manejo de errores
 app.use((err, req, res, next) => {
