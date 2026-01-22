@@ -53,7 +53,9 @@ router.post('/registro', [
     });
   } catch (error) {
     console.error('Error en registro:', error);
-    res.status(500).json({ error: 'Error al registrar usuario' });
+    console.error('Error stack:', error.stack);
+    console.error('Error message:', error.message);
+    res.status(500).json({ error: 'Error al registrar usuario', detalle: error.message });
   }
 });
 
