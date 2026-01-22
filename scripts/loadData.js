@@ -210,7 +210,7 @@ async function cargarPuntosMedida() {
   });
 }
 
-// Cargar datos de tráfico (solo enero como ejemplo - puedes añadir más meses)
+// Cargar datos de tráfico (solo enero como ejemplo)
 async function cargarTrafico() {
   console.log('🚗 Cargando datos de tráfico (enero 2051)...');
   const results = [];
