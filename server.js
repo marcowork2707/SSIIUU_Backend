@@ -25,7 +25,8 @@ app.get('/', (req, res) => {
       accidentes: '/api/accidentes',
       trafico: '/api/trafico',
       kpis: '/api/kpis',
-      puntosMedida: '/api/puntos-medida'
+      puntosMedida: '/api/puntos-medida',
+      sensores: '/api/sensores (TRABAJO TEÓRICO)'
     },
     authentication: 'JWT Bearer Token required for protected routes'
   });
@@ -38,6 +39,7 @@ const traficoRoutes = require('./routes/trafico');
 const kpisRoutes = require('./routes/kpis');
 const puntosMedidaRoutes = require('./routes/puntosMedida');
 const usuariosRoutes = require('./routes/usuarios');
+const sensoresRoutes = require('./routes/sensores'); // RUTA PARA TRABAJO TEÓRICO
 
 app.use('/api/auth', authRoutes);
 app.use('/api/accidentes', accidentesRoutes);
@@ -45,6 +47,7 @@ app.use('/api/trafico', traficoRoutes);
 app.use('/api/kpis', kpisRoutes);
 app.use('/api/puntos-medida', puntosMedidaRoutes);
 app.use('/api/usuarios', usuariosRoutes);
+app.use('/api/sensores', sensoresRoutes); // RUTA PARA TRABAJO TEÓRICO
 
 // Manejo de errores
 app.use((err, req, res, next) => {
